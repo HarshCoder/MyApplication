@@ -23,7 +23,7 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity {
 
-    private SitesAdapter mAdapter;
+    private static SitesAdapter mAdapter;
     private ListView sitesList;
     private ProgressBar bar;
     private TextView view;
@@ -75,8 +75,8 @@ public class MainActivity extends Activity {
 
 
         }else{
-            MainActivity.loadArray(getApplicationContext());
-            MainActivity.loadNotify(getApplicationContext());
+            checked = MainActivity.loadArray(getApplicationContext(),"checked","checked_Status",checked);
+            notify = MainActivity.loadArray(getApplicationContext(),"notify","notify_Status",notify);
             bar.setVisibility(View.INVISIBLE);
             bar.setEnabled(false);
             view.setVisibility(View.INVISIBLE);
@@ -185,82 +185,64 @@ public class MainActivity extends Activity {
     {
         int notifyNo = Integer.parseInt(notify.get(pos));
         notifyNo++;
-        notify.add(pos + SitesXmlPullParser.getStackSize(),String.valueOf(notifyNo));
-        notify.remove(pos+1);
+        notify.add(pos, String.valueOf(notifyNo));
+        notify.remove(pos + 1);
+
     }
     private static int getValue(Context context, String key)
     {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME,context.MODE_PRIVATE);
-        int value = settings.getInt(key,0);
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, context.MODE_PRIVATE);
+        int value = settings.getInt(key, 0);
         return value;
     }
     private static void setValue(Context context,String key,int value)
     {
-        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME,context.MODE_PRIVATE);
+        SharedPreferences settings = context.getSharedPreferences(PREFS_NAME, context.MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
         editor.putInt(key, value);
         // Commit the edits
         editor.apply();
     }
-    public static boolean saveArray(Context context)
+    public static boolean saveArray(Context context,String array,String miniArray,ArrayList<String> arrayList)
     {
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
         SharedPreferences.Editor mEdit1 = sp.edit();
     /* checked is an array */
-        mEdit1.putInt("array", checked.size());
+        mEdit1.putInt(array, arrayList.size());
 
-        for(int i=0;i<checked.size();i++)
+        for(int i=0;i<arrayList.size();i++)
         {
-            mEdit1.remove("miniArray" + i);
-            mEdit1.putString("miniArray" + i, checked.get(i));
+            mEdit1.remove(miniArray + i);
+            mEdit1.putString(miniArray + i, arrayList.get(i));
         }
 
         return mEdit1.commit();
     }
-    public static void loadArray(Context context)
+    public static ArrayList<String> loadArray(Context context,String array,String miniArray,ArrayList<String> arrayList)
     {
         SharedPreferences mSharedPreference1 = PreferenceManager.getDefaultSharedPreferences(context);
-        int size = mSharedPreference1.getInt("array", 0);
-        checked = new ArrayList<>(size);
+        int size = mSharedPreference1.getInt(array, 0);
+        arrayList = new ArrayList<>(size);
         for(int i=0;i<size;i++)
         {
-            checked.add(mSharedPreference1.getString("miniArray" + i, null));
+            arrayList.add(mSharedPreference1.getString(miniArray + i, null));
         }
-
-    }
-    public static boolean saveNotifyArray(Context context)
-    {
-        SharedPreferences sp1 = PreferenceManager.getDefaultSharedPreferences(context);
-        SharedPreferences.Editor mEdit1 = sp1.edit();
-    /* checked is an array */
-        mEdit1.putInt("notifyArray", notify.size());
-
-        for(int i=0;i<notify.size();i++)
-        {
-            mEdit1.remove("notify" + i);
-            mEdit1.putString("notify" + i, notify.get(i));
-        }
-
-        return mEdit1.commit();
-    }    public static void loadNotify(Context context)
-    {
-        SharedPreferences mSharedPreference2 = PreferenceManager.getDefaultSharedPreferences(context);
-        int size = mSharedPreference2.getInt("notifyArray", 0);
-        notify = new ArrayList<>(size);
-        for(int i=0;i<size;i++)
-        {
-            notify.add(mSharedPreference2.getString("notify" + i, null));
-        }
+        return arrayList;
 
     }
     protected void onDestroy()
     {
         super.onDestroy();
-        MainActivity.saveArray(getApplicationContext());
-        MainActivity.saveNotifyArray(getApplicationContext());
+        MainActivity.saveArray(getApplicationContext(), "checked", "checked_Status",checked);
+        MainActivity.saveArray(getApplicationContext(), "notify", "notify_Status", notify);
     }
     public static int getSize()
     {
         return checked.size();
     }
+
+    public static SitesAdapter getAdapter(){
+        return mAdapter;
+    }
+
 }

@@ -30,8 +30,8 @@ public class Reciever extends BroadcastReceiver {
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(context)
                 .setSmallIcon(R.drawable.icon)
-                .setContentTitle("My Notification")
-                .setContentText("Hello World")
+                .setContentTitle("PetConnect : Event Reminder")
+                .setContentText("Hello World") // Get Event Name and Time
                 .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE);
         builder.setContentIntent(pendingIntent);
         manager.notify(0,builder.build());

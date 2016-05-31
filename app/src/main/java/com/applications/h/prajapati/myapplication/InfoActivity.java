@@ -10,11 +10,13 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import com.cloudant.client.api.ClientBuilder;
 import com.cloudant.client.api.CloudantClient;
@@ -49,6 +51,16 @@ public class InfoActivity extends AppCompatActivity {
     private TextView description;
     private String[] months;
     private int index;
+    private boolean leapYear = false;
+    private String[] days;
+    private String notifyMonth;
+    private String notifyDay;
+
+    private SitesAdapter adapter = MainActivity.getAdapter();
+
+    private ViewFlipper viewFlipper;
+    private float lastX;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,10 +77,13 @@ public class InfoActivity extends AppCompatActivity {
         String endTime = getIntent().getExtras().getString("endtime");
         final String desc = getIntent().getExtras().getString("description");
         months = getResources().getStringArray(R.array.months);
+        days = getResources().getStringArray(R.array.days);
         message = (TextView)findViewById(R.id.textView2);
         view = (TextView)findViewById(R.id.textView3);
         checkBox = (CheckBox)findViewById(R.id.checkBox);
         notify = (Button)findViewById(R.id.button);
+
+        viewFlipper = (ViewFlipper) findViewById(R.id.viewflipper);
 
         if(!MainActivity.isChecked(pos))
         {
@@ -114,12 +129,12 @@ public class InfoActivity extends AppCompatActivity {
 
 
 
-        eventName.setText("EVENT NAME: "+name);
-        sDate.setText("START DATE: " + startDate);
-        sTime.setText("   START TIME: " + startTime);
-        eDate.setText("END DATE: " + endDate);
-        eTime.setText("   END TIME: " + endTime);
-        description.setText("DESCRIPTION: " + desc);
+        eventName.setText(name);
+        sDate.setText(startDate);
+        sTime.setText(startTime);
+        eDate.setText(endDate);
+        eTime.setText(endTime);
+        description.setText(desc);
 
         share = (Button) findViewById(R.id.button2);
         share.setOnClickListener(new View.OnClickListener() {
@@ -129,7 +144,7 @@ public class InfoActivity extends AppCompatActivity {
                 shareIntent.setType("text/plain");
                 shareIntent.putExtra(Intent.EXTRA_SUBJECT,"");
                 shareIntent.putExtra(Intent.EXTRA_TEXT,name);
-                startActivity(Intent.createChooser(shareIntent,"Share Via"));
+                startActivity(Intent.createChooser(shareIntent, "Share Via"));
             }
         });
         notify.setOnClickListener(new View.OnClickListener() {
@@ -137,43 +152,74 @@ public class InfoActivity extends AppCompatActivity {
             public void onClick(View v) {
                 MainActivity.addNotfiy(pos);
                 Log.e("Vishwa", "Hello");
+                String checkDate = "May 30, 2016";
+                String checkTime = "4:00 PM"; // replace startDate and startTime with checkDate and checkTime for debugging
+                //
                 String[] array = getComponents(startDate);
                 String[] timeComp = getTime(startTime);
 
                 Calendar calendar = Calendar.getInstance();
+                int year = calendar.get(Calendar.YEAR);
+                if((year % 4 == 0) && (year%100 == 0)  && (year%400 == 0))
+                {
+                    leapYear = true;
+                }
                 for (int i = 0; i < months.length; i++) {
                     if (months[i].equals(array[0])) {
                         index = i;
                     }
                 }
                 if (calendar.get(Calendar.MONTH) < index) {
-                    calendar.set(Calendar.MONTH, index);
-                    Log.e("Month", String.valueOf(index));
+                    if(Integer.parseInt(array[1]) - 1 == 0)
+                    {
+                        notifyMonth = months[index - 1];
+                        calendar.set(Calendar.MONTH, index - 1);
+                        if(index - 1 == 1 && leapYear)
+                        {
+                            notifyDay = String.valueOf(29);
+                            calendar.set(Calendar.DAY_OF_MONTH,29);
+                        }
+                        else
+                        {
+                            notifyDay = days[index - 1];
+                            calendar.set(Calendar.DAY_OF_MONTH,Integer.parseInt(days[index - 1]));
+                        }
+                    }
+                    else
+                    {
+                        calendar.set(Calendar.MONTH, index);
+                        notifyMonth = months[index];
+                        Log.e("Month", String.valueOf(index));
+                    }
+
 
 
                 } else if (calendar.get(Calendar.MONTH) == index)
                 {
                     if((calendar.get(Calendar.DAY_OF_MONTH) < Integer.parseInt(array[1]) - 1))
                     {
-                        calendar.set(Calendar.DAY_OF_MONTH,Integer.parseInt(array[1]) - 1);
-                        Log.e("Day",String.valueOf(array[1]));
 
-                        calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeComp[0]));
-                        Log.e("Hour",timeComp[0]);
+                            calendar.set(Calendar.DAY_OF_MONTH,Integer.parseInt(array[1]) - 1);
+                            notifyDay = String.valueOf(Integer.parseInt(array[1]) - 1);
 
-                        calendar.set(Calendar.MINUTE, Integer.parseInt(timeComp[1]));
-                        Log.e("Minute",timeComp[1]);
-                        calendar.set(Calendar.SECOND, 0);
-                        if(timeComp[2].equals("AM"))
-                        {
-                            calendar.set(Calendar.AM_PM,Calendar.AM);
-                            Log.e("Am_Pm","AM");
-                        }
-                        else if(timeComp[2].equals("PM"))
-                        {
-                            calendar.set(Calendar.AM_PM,Calendar.PM);
-                            Log.e("Am_Pm","PM");
-                        }
+                            Log.e("Day",String.valueOf(array[1]));
+
+                            calendar.set(Calendar.HOUR_OF_DAY, Integer.parseInt(timeComp[0]));
+                            Log.e("Hour",timeComp[0]);
+
+                            calendar.set(Calendar.MINUTE, Integer.parseInt(timeComp[1]));
+                            Log.e("Minute",timeComp[1]);
+                            calendar.set(Calendar.SECOND, 0);
+                            if(timeComp[2].equals("AM"))
+                            {
+                                calendar.set(Calendar.AM_PM,Calendar.AM);
+                                Log.e("Am_Pm","AM");
+                            }
+                            else if(timeComp[2].equals("PM"))
+                            {
+                                calendar.set(Calendar.AM_PM,Calendar.PM);
+                                Log.e("Am_Pm","PM");
+                            }
 
                     }
                     else if((calendar.get(Calendar.DAY_OF_MONTH) <= Integer.parseInt(array[1]) - 1))
@@ -219,13 +265,14 @@ public class InfoActivity extends AppCompatActivity {
                     Intent notification = new Intent(InfoActivity.this,Reciever.class);
                     AlarmManager manager = (AlarmManager) getSystemService(ALARM_SERVICE);
                     manager.set(AlarmManager.RTC_WAKEUP,time,PendingIntent.getBroadcast(InfoActivity.this,1,notification,PendingIntent.FLAG_UPDATE_CURRENT));
-                    Toast toast = Toast.makeText(getApplicationContext(),"Notification Scheduled for " + array[0] + " " + String.valueOf(Integer.parseInt(array[1]) - 1) + " " + array[2] + " at " + startTime,Toast.LENGTH_LONG);
+                    Toast toast = Toast.makeText(getApplicationContext(),"Notification Scheduled for " + notifyMonth + " " + notifyDay + " " + array[2] + " at " + startTime,Toast.LENGTH_LONG);
                     toast.show();
                 }
                 else {
                     Toast toast = Toast.makeText(getApplicationContext(),"No Possibility",Toast.LENGTH_LONG);
                     toast.show();
                 }
+                notify.setVisibility(View.INVISIBLE);
 
             }
         });
@@ -240,7 +287,7 @@ public class InfoActivity extends AppCompatActivity {
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
 
                     public void onClick(DialogInterface dialog, int which) {
-                        switch (which){
+                        switch (which) {
                             case DialogInterface.BUTTON_POSITIVE:
                                 checkBox.setVisibility(View.INVISIBLE);
                                 MainActivity.addCheck(pos);
@@ -263,10 +310,12 @@ public class InfoActivity extends AppCompatActivity {
                         .setNegativeButton("No", dialogClickListener)
                         .show();
 
-                Log.e("Vishwa","Alert working");
+                Log.e("Vishwa", "Alert working");
             }
         });
+
         new RunTask().execute();
+
 
 
     }
@@ -321,7 +370,18 @@ public class InfoActivity extends AppCompatActivity {
             eDate.setVisibility(View.INVISIBLE);
             eTime.setVisibility(View.INVISIBLE);
             description.setVisibility(View.INVISIBLE);
-            notify.setVisibility(View.INVISIBLE);
+            if(!MainActivity.isNotified(pos))
+            {
+                notify.setVisibility(View.VISIBLE);
+                notify.setEnabled(true);
+            }
+            else
+            {
+                notify.setEnabled(false);
+                notify.setVisibility(View.INVISIBLE);
+            }
+
+
             share.setVisibility(View.INVISIBLE);
             message.setVisibility(View.INVISIBLE);
             if(checkBox.getVisibility() == View.VISIBLE)
@@ -337,7 +397,16 @@ public class InfoActivity extends AppCompatActivity {
         }
         @Override
         protected void onPostExecute(String result) {
-            notify.setVisibility(View.VISIBLE);
+            if(!MainActivity.isNotified(pos))
+            {
+                notify.setVisibility(View.VISIBLE);
+                notify.setEnabled(true);
+            }
+            else
+            {
+                notify.setEnabled(false);
+                notify.setVisibility(View.INVISIBLE);
+            }
             share.setVisibility(View.VISIBLE);
             if(hideBox == true)
             {
@@ -345,7 +414,7 @@ public class InfoActivity extends AppCompatActivity {
             }
             message.setVisibility(View.VISIBLE);
             view.setVisibility(View.VISIBLE);
-            eventName.setVisibility(View.INVISIBLE);
+            eventName.setVisibility(View.VISIBLE);
             sDate.setVisibility(View.VISIBLE);
             sTime.setVisibility(View.VISIBLE);
             eDate.setVisibility(View.VISIBLE);
@@ -372,7 +441,7 @@ public class InfoActivity extends AppCompatActivity {
         }
         public void addAttendes(int index,int size)
         {
-            if(attendes == null)
+            if(attendes == null || attendes.size() == 0)
             {
                 attendes = new ArrayList<>();
                 for(int i=0; i<size;i++)
@@ -449,9 +518,74 @@ public class InfoActivity extends AppCompatActivity {
         StringBuilder builder = new StringBuilder(time);
         int index = builder.indexOf(":");
         builder.deleteCharAt(index);
-        builder.insert(index," ");
+        builder.insert(index, " ");
         time = builder.toString();
         String[] components = time.split(" ");
         return components;
     }
+
+    // Using the following method, we will handle all screen swaps.
+    public boolean onTouchEvent(MotionEvent touchevent) {
+        switch (touchevent.getAction()) {
+
+            case MotionEvent.ACTION_DOWN:
+                lastX = touchevent.getX();
+                break;
+            case MotionEvent.ACTION_UP:
+                float currentX = touchevent.getX();
+
+                // Handling left to right screen swap.
+                if (lastX < currentX) {
+                    if (pos>=1) {
+                        pos--;
+                        eventName.setText(adapter.getItem(pos).getName());
+                        sDate.setText(adapter.getItem(pos).getStartDate());
+                        sTime.setText(adapter.getItem(pos).getStartTime());
+                        eDate.setText(adapter.getItem(pos).getEndDate());
+                        eTime.setText(adapter.getItem(pos).getEndTime());
+                        description.setText(adapter.getItem(pos).getDescription());
+                    }else{
+                        break;
+                    }
+                    // If there aren't any other children, just break.
+                    /*if (viewFlipper.getDisplayedChild() == 0)
+                        break;*/
+
+                    // Next screen comes in from left.
+                    viewFlipper.setInAnimation(this, R.anim.slide_in_from_left);
+                    // Current screen goes out from right.
+                    viewFlipper.setOutAnimation(this, R.anim.slide_out_to_right);
+
+
+
+                    // Display next screen.
+                    viewFlipper.showNext();
+                }
+
+                // Handling right to left screen swap.
+                if (lastX > currentX) {
+                    pos++;
+                    eventName.setText(adapter.getItem(pos).getName());
+                    sDate.setText(adapter.getItem(pos).getStartDate());
+                    sTime.setText(adapter.getItem(pos).getStartTime());
+                    eDate.setText(adapter.getItem(pos).getEndDate());
+                    eTime.setText(adapter.getItem(pos).getEndTime());
+                    description.setText(adapter.getItem(pos).getDescription());
+                    // If there is a child (to the left), kust break.
+                    /*if (viewFlipper.getDisplayedChild() == 1)
+                        break;*/
+
+                    // Next screen comes in from right.
+                    viewFlipper.setInAnimation(this, R.anim.slide_in_from_right);
+                    // Current screen goes out from left.
+                    viewFlipper.setOutAnimation(this, R.anim.slide_out_to_left);
+
+                    // Display previous screen.
+                    viewFlipper.showPrevious();
+                }
+                break;
+        }
+        return false;
+    }
+
 }

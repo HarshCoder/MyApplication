@@ -17,4 +17,18 @@
         <item>Nov</item>
         <item>Dec</item>
     </string-array>
+    <string-array name="days">
+        <item>31</item>
+        <item>28</item>
+        <item>31</item>
+        <item>30</item>
+        <item>31</item>
+        <item>30</item>
+        <item>31</item>
+        <item>31</item>
+        <item>30</item>
+        <item>31</item>
+        <item>30</item>
+        <item>31</item>
+    </string-array>
 </resources>

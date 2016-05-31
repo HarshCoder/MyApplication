@@ -57,7 +57,7 @@ public class SitesAdapter extends ArrayAdapter<StackSite> {
 
         //Set the relavent text in our TextViews
       //  if(!(getItem(pos-1).getName().equals(getItem(pos).getName()))) {
-        nameTxt.setText("EVENT NAME: " + getItem(pos).getName());
+        nameTxt.setText(getItem(pos).getName());
         startDateTxt.setText("DATE: " + getItem(pos).getStartDate());
         startTimeTxt.setText("      TIME: " + getItem(pos).getStartTime());
 
